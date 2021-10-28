@@ -1,0 +1,7 @@
+SON MUY MUY PARECIDAS LAS DOS SOLUCIONES APENAS HAY DIFERENCIAS
+
+ListaLocalidadVisual_ver1.java NO UTILIZA SENTENCIAS PREPARADAS
+ListaLocalidadVisual_ver2.java SI UTILIZA SENTENCIAS PREPARADAS
+
+ListaLocalidadVisual_ver1.java llama al método consultaLocalidadFormulario de AccesoBdatos.java
+ListaLocalidadVisual_ver2.java llama al método consultaLocalidadFormulario2 de AccesoBdatos.java
