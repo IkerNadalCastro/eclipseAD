@@ -165,9 +165,6 @@ public class AccesoBaseDatos {
 	}
 	
 	
-	
-	
-	
 	public void desconectar() throws SQLException, ClassNotFoundException {
 		
 		conecta = null;
