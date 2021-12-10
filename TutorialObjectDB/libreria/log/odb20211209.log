@@ -1,0 +1,14 @@
+------------------------------------------------------------------------------------------------------------------------
+
+[2021-12-09 09:53:20 #1 store] 
+Database 'C:\eclipse-workspace\21-22\TutorialObjectDB\db\p2.odb' is opened by 9464@B02-PC16
+
+[2021-12-09 09:53:20 #2 store] 
+Configuration path: ?
+
+[2021-12-09 09:53:20 #3 type] 
+Type tutorial.Point is not enhanced.
+
+[2021-12-09 09:53:20 #4 store] 
+Database 'C:\eclipse-workspace\21-22\TutorialObjectDB\db\p2.odb' is closed by 9464@B02-PC16
+

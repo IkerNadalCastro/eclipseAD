@@ -20,6 +20,7 @@ import javax.swing.SwingConstants;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 
 import primero.*;
 
@@ -28,6 +29,8 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class Vista {
 
@@ -38,6 +41,8 @@ public class Vista {
 	private JTextField textField_salario;
 	private JTextField textField_comision;
 	private JTextField textField_fechaAlta;
+	private JComboBox comboBox_elijeDepartamento;
+	private JComboBox comboBox_elijeDirector;
 	private SessionFactory sesion;
 	private Session session;
 
@@ -96,11 +101,124 @@ public class Vista {
 	
 	public void fechaActual(JTextField campoFecha) {
 		
+		session = sesion.openSession();
+		
 		String fecha = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
-		campoFecha.setText(fecha);
+		campoFecha.setText(fecha); 
+		
+		session.close();
 	
 	}
 	
+	public void consultarEmpleado(JTextField campoTexto) {
+		
+		Short texto = Short.valueOf(campoTexto.getText().trim());
+		Empleados emp = (Empleados) session.get(Empleados.class, texto);
+		
+		if (emp == null) {
+			
+			JOptionPane.showMessageDialog(null, "No se ha encontrado al empleado", "Error en la búsqueda", JOptionPane.WARNING_MESSAGE);
+			
+		} else {
+			
+			textField_numeroEmpleado.setText(String.valueOf(emp.getEmpNo()));
+			textField_apellido.setText(String.valueOf(emp.getApellido()));
+			textField_oficio.setText(String.valueOf(emp.getOficio()));
+			textField_salario.setText(String.valueOf(emp.getSalario()));
+			
+			if (emp.getComision() == null) {
+				
+				textField_comision.setText("0");
+				
+			} else {
+				
+				textField_comision.setText(String.valueOf(emp.getComision()));
+				
+			}
+			
+			textField_fechaAlta.setText(String.valueOf(emp.getFechaAlt()));
+			
+			Departamentos dep = emp.getDepartamentos();
+			Byte bit = dep.getDeptNo();
+			
+			for(int i = 1; i < comboBox_elijeDepartamento.getItemCount(); i++) {
+				
+				String estrinj = (String) comboBox_elijeDepartamento.getItemAt(i);
+				String[] estrinjs = estrinj.split(" / ");
+				
+				Byte eraBaitBro = Byte.valueOf(estrinjs[0]);
+				
+				if (bit == eraBaitBro) {
+					
+					comboBox_elijeDepartamento.setSelectedIndex(i);
+					
+				}
+				
+			}
+			
+			Short dir = emp.getDir();
+			
+			for(int i = 1; i < comboBox_elijeDirector.getItemCount(); i++) {
+				
+				String estring = (String) comboBox_elijeDirector.getItemAt(i);
+				String[] estrings = estring.split(" / ");
+				
+				Short cortito = Short.valueOf(estrings[0]);
+				
+				if (dir.equals(cortito)) {
+					
+					comboBox_elijeDirector.setSelectedIndex(i);
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+	public void insertarEmpleados() {
+		
+		Transaction t = session.beginTransaction();
+		
+		if(textField_numeroEmpleado.getText().trim().equalsIgnoreCase("") || textField_apellido.getText().trim().equalsIgnoreCase("") || textField_oficio.getText().trim().equalsIgnoreCase("") || 
+				textField_salario.getText().trim().equalsIgnoreCase("") || textField_comision.getText().trim().equalsIgnoreCase("") || textField_fechaAlta.getText().trim().equalsIgnoreCase("")
+				|| comboBox_elijeDepartamento.getSelectedIndex() == 0 || comboBox_elijeDirector.getSelectedIndex() == 0) {
+			
+			JOptionPane.showMessageDialog(null, "No se ha podido insertar al empleado porque algún campo está vacío", "Error al insertar", JOptionPane.WARNING_MESSAGE);
+			
+			t.rollback();
+			
+		} else {
+			
+			Empleados emp = new Empleados();
+			
+			emp.setEmpNo(Short.valueOf(textField_numeroEmpleado.getText().trim()));
+			
+			String linea = (String) comboBox_elijeDepartamento.getSelectedItem();
+			String[] lineas = linea.split(" / ");
+			Departamentos dep = new Departamentos(Byte.valueOf(lineas[0]));
+			emp.setDepartamentos(dep);
+			
+			emp.setApellido(textField_apellido.getText());
+			emp.setOficio(textField_oficio.getText());
+			
+			String linea2 = (String) comboBox_elijeDirector.getSelectedItem();
+			String[] lineas2 = linea2.split(" / ");
+			emp.setDir(Short.valueOf(lineas2[0]));
+			
+			emp.setFechaAlt(Date.valueOf(textField_fechaAlta.getText()));
+			emp.setSalario(Float.valueOf(textField_salario.getText()));
+			emp.setComision(Float.valueOf(textField_comision.getText()));
+			
+			session.save(emp);
+			
+			t.commit();
+		}
+		
+		insertarDirectores(comboBox_elijeDirector);
+		
+	}
 
 	/**
 	 * Initialize the contents of the frame.
@@ -108,7 +226,6 @@ public class Vista {
 	private void initialize() {
 		
 		sesion = SessionFactoryUtil.getSessionFactory();
-		session = sesion.openSession(); 
 		
 		frame = new JFrame();
 		frame.setBounds(100, 100, 450, 300);
@@ -142,6 +259,19 @@ public class Vista {
 		frame.getContentPane().add(lblNewLabel_5);
 		
 		textField_numeroEmpleado = new JTextField();
+		textField_numeroEmpleado.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyTyped(java.awt.event.KeyEvent e) {
+				
+				char c = e.getKeyChar();
+				
+				if(! Character.isDigit(c))
+					e.consume();
+				if(textField_numeroEmpleado.getText().length()>=4) 
+					e.consume();		
+				//numero.setTransferHandler(null);*/
+			}
+		});
 		textField_numeroEmpleado.setBounds(99, 45, 118, 20);
 		frame.getContentPane().add(textField_numeroEmpleado);
 		textField_numeroEmpleado.setColumns(10);
@@ -170,7 +300,9 @@ public class Vista {
 		button_consultarEmpleado.setBounds(227, 44, 197, 23);
 		button_consultarEmpleado.addActionListener(new ActionListener() { 
 			
-			  public void actionPerformed(ActionEvent e) { 
+			  public void actionPerformed(ActionEvent e) {
+				  
+					session = sesion.openSession(); 
 				  
 				    String textoConsultar;
 				    textoConsultar = textField_numeroEmpleado.getText().trim();
@@ -179,39 +311,33 @@ public class Vista {
 				    	
 				    	JOptionPane.showMessageDialog(null, "No puede buscar un campo vacío o nulo", "Error en la búsqueda", JOptionPane.WARNING_MESSAGE);
 				    	
+				    } else {
+				    	
+				    	consultarEmpleado(textField_numeroEmpleado);
+				    	
 				    }
+				    
+				    session.close();
 				    
 			  } 
 		});
-		frame.getContentPane().add(button_consultarEmpleado);
+		frame.getContentPane().add(button_consultarEmpleado);		
 		
-		/*
-		 * public void keyTyped(java.awt.event.KeyEvent e) {
-				char c = e.getKeyChar();
-				if(! Character.isDigit(c))
-					e.consume();
-				if(numero.getText().length()>=4) 
-					e.consume();		
-			}
-			
-			esto es para limitar el numero de caracteres que deja escribir a 4
-			
-			numero.setTransferHandler(null);
-			
-			esto otra cosa que pasó angel, puede que sea necesario para que funcione lo otro
-		 * */
-		
-		JComboBox comboBox_elijeDepartamento = new JComboBox();
+		comboBox_elijeDepartamento = new JComboBox();
 		comboBox_elijeDepartamento.setModel(new DefaultComboBoxModel(new String[] {"ELIJE DEPARTAMENTO"}));
 		comboBox_elijeDepartamento.setBounds(227, 69, 197, 22);
+		sesion.openSession();
 		insertarDepartamentos(comboBox_elijeDepartamento);
 		frame.getContentPane().add(comboBox_elijeDepartamento);
+		session.close();
 		
-		JComboBox comboBox_elijeDirector = new JComboBox();
+		comboBox_elijeDirector = new JComboBox();
 		comboBox_elijeDirector.setModel(new DefaultComboBoxModel (new String[] {"ELIJE DIRECTOR"}));
 		comboBox_elijeDirector.setBounds(227, 94, 197, 22);
+		sesion.openSession();
 		insertarDirectores(comboBox_elijeDirector);
 		frame.getContentPane().add(comboBox_elijeDirector);
+		session.close();
 		
 		JLabel lblNewLabel_6 = new JLabel("FECHA ALTA: ");
 		lblNewLabel_6.setHorizontalAlignment(SwingConstants.CENTER);
@@ -230,6 +356,17 @@ public class Vista {
 		frame.getContentPane().add(lblNewLabel_7);
 		
 		JButton button_insertar = new JButton("Insertar");
+		button_insertar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+
+				session = sesion.openSession(); 
+				
+				insertarEmpleados();
+
+				session.close();
+				
+			}
+		});
 		button_insertar.setBounds(10, 173, 100, 23);
 		frame.getContentPane().add(button_insertar);
 		
@@ -247,9 +384,13 @@ public class Vista {
 			
 			  public void actionPerformed(ActionEvent e) { 
 				  
-				    System.exit(-1);
+				  session = sesion.openSession();
+				  
+				  System.exit(-1);
 				    
-				  } 
+				  session.close();  
+				 
+			  } 
 		});
 		frame.getContentPane().add(button_salir);
 		
@@ -258,6 +399,8 @@ public class Vista {
 		button_limpiar.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
+				
+				session = sesion.openSession();
 				
 				textField_numeroEmpleado.setText("");
 				textField_apellido.setText("");
@@ -269,6 +412,8 @@ public class Vista {
 				comboBox_elijeDirector.setSelectedIndex(0);
 				
 				fechaActual(textField_fechaAlta);
+				
+				session.close();
 				
 			}
 			
